@@ -33,8 +33,9 @@ export default function ChoresScreen() {
     clearAllChores,
     clearCompletedChores,
   } = useHouseData();
-  const { t, i, userName, userPhoto } = useSettings();
+  const { t, i, userName, userPhoto, isDarkMode } = useSettings();
   const theme = useTheme();
+  const pickerThemeVariant = isDarkMode ? "dark" : "light";
   const [filterUser, setFilterUser] = useState<string | "all">("all");
   const [showAddForm, setShowAddForm] = useState(false);
   const [newTitle, setNewTitle] = useState("");
@@ -414,6 +415,7 @@ export default function ChoresScreen() {
                 value={newDueDate}
                 mode="date"
                 display={Platform.OS === "ios" ? "spinner" : "default"}
+                themeVariant={pickerThemeVariant}
                 onChange={(_, date) => {
                   if (Platform.OS === "android") setShowDatePicker(false);
                   if (date) setNewDueDate((prev) => new Date(prev.setFullYear(date.getFullYear(), date.getMonth(), date.getDate())));
@@ -425,6 +427,7 @@ export default function ChoresScreen() {
                 value={newDueDate}
                 mode="time"
                 display={Platform.OS === "ios" ? "spinner" : "default"}
+                themeVariant={pickerThemeVariant}
                 onChange={(_, date) => {
                   if (Platform.OS === "android") setShowTimePicker(false);
                   if (date) setNewDueDate((prev) => new Date(prev.setHours(date.getHours(), date.getMinutes(), 0, 0)));
