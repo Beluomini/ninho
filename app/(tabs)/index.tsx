@@ -177,13 +177,6 @@ export default function BulletinScreen() {
 
           {/* Main content - single latest message */}
           <View style={{ flex: 1, justifyContent: "center", paddingHorizontal: 20 }}>
-            <Text style={{
-              fontSize: 13, fontWeight: "600", color: theme.textLight,
-              marginBottom: 8, textTransform: "uppercase", letterSpacing: 1,
-            }}>
-              {t.bulletin.lastMessage}
-            </Text>
-
             <Card theme={theme}>
               <View style={{ alignItems: "center", paddingVertical: 24, paddingHorizontal: 12, gap: 16 }}>
                 <Avatar uri={displayPhoto} name={displayName} size="lg" />

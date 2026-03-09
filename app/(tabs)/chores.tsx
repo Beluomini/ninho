@@ -138,6 +138,7 @@ export default function ChoresScreen() {
         <Pressable
           onPress={() => setFilterUser("all")}
           style={{
+            minHeight: 40,
             minWidth: chipMinWidth,
             paddingHorizontal: 16,
             paddingVertical: 8,
@@ -167,6 +168,7 @@ export default function ChoresScreen() {
               key={member.id}
               onPress={() => setFilterUser(member.id)}
               style={{
+                minHeight: 40,
                 minWidth: chipMinWidth,
                 flexDirection: "row",
                 alignItems: "center",
@@ -488,7 +490,7 @@ export default function ChoresScreen() {
         </Pressable>
       </Modal>
 
-      {/* Bottom bar: Limpar concluídas, Limpar todas, Criar tarefa */}
+      {/* Bottom: três botões flutuantes separados */}
       {!showAddForm && (
         <View
           style={{
@@ -498,69 +500,82 @@ export default function ChoresScreen() {
             right: 0,
             flexDirection: "row",
             alignItems: "center",
-            justifyContent: "space-between",
+            justifyContent: "center",
             paddingHorizontal: 20,
             paddingVertical: 12,
-            paddingBottom: 24,
-            backgroundColor: theme.background,
-            borderTopWidth: 1,
-            borderTopColor: theme.border,
-            gap: 8,
+            paddingBottom: 20,
+            gap: 10,
           }}
         >
-          <Pressable
-            onPress={handleClearCompleted}
-            style={{
-              flex: 1,
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 6,
-              height: 48,
-              borderRadius: 24,
-              backgroundColor: theme.surface,
-              borderWidth: 1,
-              borderColor: theme.border,
-            }}
-          >
-            <CheckCircle size={18} color={theme.success} />
-            <Text style={{ fontSize: 12, fontWeight: "600", color: theme.textLight }}>
-              {t.chores.clearCompleted}
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={handleClearAll}
-            style={{
-              flex: 1,
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 6,
-              height: 48,
-              borderRadius: 24,
-              backgroundColor: theme.surface,
-              borderWidth: 1,
-              borderColor: theme.border,
-            }}
-          >
-            <Trash2 size={18} color={theme.danger} />
-            <Text style={{ fontSize: 12, fontWeight: "600", color: theme.danger }}>
-              {t.chores.clearAll}
-            </Text>
-          </Pressable>
+          {/* Limpar concluídas - View sem flex para largura seguir o conteúdo */}
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Pressable
+              onPress={handleClearCompleted}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 6,
+                height: 48,
+                paddingHorizontal: 16,
+                paddingVertical: 12,
+                backgroundColor: theme.surface,
+                borderRadius: 24,
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.08,
+                shadowRadius: 12,
+                elevation: 4,
+              }}
+            >
+              <CheckCircle size={18} color={theme.success} />
+              <Text style={{ fontSize: 12, fontWeight: "600", color: theme.textLight }}>
+                {t.chores.clearCompleted}
+              </Text>
+            </Pressable>
+          </View>
+          {/* Limpar tudo */}
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Pressable
+              onPress={handleClearAll}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 6,
+                height: 48,
+                paddingHorizontal: 16,
+                paddingVertical: 12,
+                backgroundColor: theme.surface,
+                borderRadius: 24,
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.08,
+                shadowRadius: 12,
+                elevation: 4,
+              }}
+            >
+              <Trash2 size={18} color={theme.danger} />
+              <Text style={{ fontSize: 12, fontWeight: "600", color: theme.danger }}>
+                {t.chores.clearAll}
+              </Text>
+            </Pressable>
+          </View>
+          {/* Adicionar */}
           <Pressable
             onPress={() => setShowAddForm(true)}
             style={{
-              width: 48,
-              height: 48,
-              borderRadius: 24,
+              width: 56,
+              height: 56,
+              borderRadius: 28,
               backgroundColor: theme.primary,
               alignItems: "center",
               justifyContent: "center",
               shadowColor: "#000",
-              shadowOpacity: 0.15,
-              shadowRadius: 8,
-              elevation: 5,
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.12,
+              shadowRadius: 12,
+              elevation: 4,
             }}
           >
             <Plus size={24} color="#fff" />

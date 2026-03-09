@@ -97,57 +97,64 @@ export function ChatInput({
   const danger = theme?.danger ?? "#EF4444";
   const cardBg = theme?.card ?? "#FFFFFF";
 
+  const floatingStyle = {
+    backgroundColor: cardBg,
+    borderRadius: 28,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginHorizontal: 16,
+    marginBottom: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
+  };
+
   if (isRecording) {
     return (
-      <View style={{
-        flexDirection: "row", alignItems: "center",
-        backgroundColor: bg, borderTopWidth: 1, borderTopColor: borderColor,
-        paddingHorizontal: 16, paddingVertical: 12, gap: 12,
-      }}>
-        <Pressable onPress={handleCancelRecording} style={{ padding: 4 }}>
-          <X size={22} color={danger} />
-        </Pressable>
-
-        <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <Animated.View style={{
-            width: 10, height: 10, borderRadius: 5, backgroundColor: danger,
-            transform: [{ scale: pulseAnim }],
-          }} />
-          <Text style={{ fontSize: 14, color: danger, fontWeight: "600" }}>
-            {attachLabels?.recording ?? "Recording audio..."}
-          </Text>
+      <View style={{ paddingHorizontal: 16, paddingVertical: 8 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 12, ...floatingStyle }}>
+          <Pressable onPress={handleCancelRecording} style={{ padding: 4 }}>
+            <X size={22} color={danger} />
+          </Pressable>
+          <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <Animated.View style={{
+              width: 10, height: 10, borderRadius: 5, backgroundColor: danger,
+              transform: [{ scale: pulseAnim }],
+            }} />
+            <Text style={{ fontSize: 14, color: danger, fontWeight: "600" }}>
+              {attachLabels?.recording ?? "Recording audio..."}
+            </Text>
+          </View>
+          <Pressable
+            onPress={handleMicPress}
+            style={{
+              width: 44, height: 44, borderRadius: 22,
+              backgroundColor: primary,
+              alignItems: "center", justifyContent: "center",
+            }}
+          >
+            <Send size={18} color="#fff" />
+          </Pressable>
         </View>
-
-        <Pressable
-          onPress={handleMicPress}
-          style={{
-            width: 44, height: 44, borderRadius: 22,
-            backgroundColor: primary,
-            alignItems: "center", justifyContent: "center",
-          }}
-        >
-          <Send size={18} color="#fff" />
-        </Pressable>
       </View>
     );
   }
 
   return (
-    <View>
-      {/* Attachment options */}
+    <View style={{ paddingVertical: 8 }}>
+      {/* Attachment options - floating */}
       {showAttach && (
-        <View style={{
-          flexDirection: "row", backgroundColor: bg,
-          borderTopWidth: 1, borderTopColor: borderColor,
-          paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4, gap: 12,
-        }}>
+        <View style={{ flexDirection: "row", paddingHorizontal: 16, paddingBottom: 6, gap: 12 }}>
           <Pressable
             onPress={() => handleAttach("image")}
             style={{
               flexDirection: "row", alignItems: "center", gap: 6,
               backgroundColor: cardBg, borderRadius: 20,
               paddingHorizontal: 14, paddingVertical: 8,
-              borderWidth: 1, borderColor: borderColor,
+              shadowColor: "#000", shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.06, shadowRadius: 8, elevation: 3,
             }}
           >
             <ImageIcon size={16} color={primary} />
@@ -161,7 +168,8 @@ export function ChatInput({
               flexDirection: "row", alignItems: "center", gap: 6,
               backgroundColor: cardBg, borderRadius: 20,
               paddingHorizontal: 14, paddingVertical: 8,
-              borderWidth: 1, borderColor: borderColor,
+              shadowColor: "#000", shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.06, shadowRadius: 8, elevation: 3,
             }}
           >
             <Video size={16} color={primary} />
@@ -172,11 +180,10 @@ export function ChatInput({
         </View>
       )}
 
-      {/* Input row */}
+      {/* Input row - floating */}
       <View style={{
-        flexDirection: "row", alignItems: "center",
-        backgroundColor: bg, borderTopWidth: showAttach ? 0 : 1, borderTopColor: borderColor,
-        paddingHorizontal: 12, paddingVertical: 10, gap: 8,
+        flexDirection: "row", alignItems: "center", gap: 8,
+        ...floatingStyle,
       }}>
         {/* Plus / attachment toggle */}
         <Pressable
