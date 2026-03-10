@@ -16,6 +16,7 @@ export const en = {
     attachPhoto: "Photo",
     attachVideo: "Video",
     recording: "Recording audio...",
+    recordingMax: "(max)",
     audioSent: "Audio sent",
     photoSent: "Photo sent",
     videoSent: "Video sent",

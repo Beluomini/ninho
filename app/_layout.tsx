@@ -1,6 +1,12 @@
 import "../global.css";
-import { View, ActivityIndicator } from "react-native";
+import { View, ActivityIndicator, LogBox } from "react-native";
 import { Stack } from "expo-router";
+
+// Suppress SafeAreaView deprecation warning from dependencies (e.g. react-native-screens).
+// This app already uses SafeAreaView from "react-native-safe-area-context" everywhere.
+LogBox.ignoreLogs([
+  "SafeAreaView has been deprecated and will be removed in a future release",
+]);
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { SettingsProvider, useSettings } from "../src/contexts/SettingsContext";

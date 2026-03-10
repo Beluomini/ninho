@@ -4,11 +4,19 @@ import { useState, useRef, useEffect } from "react";
 import type { Theme } from "../../constants/colors";
 import type { MessageMediaType } from "../../types";
 
+const MAX_RECORDING_SECONDS = 180; // 3 minutes
+
+function formatRecordingTime(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
 interface ChatInputProps {
   placeholder?: string;
   onSend: (text: string, mediaType?: MessageMediaType, mediaUrl?: string) => void;
   theme?: Theme;
-  attachLabels?: { photo: string; video: string; recording: string };
+  attachLabels?: { photo: string; video: string; recording: string; recordingMax?: string };
   /** Picker returns URI or null if cancelled. */
   onPickImage?: () => Promise<string | null>;
   onPickVideo?: () => Promise<string | null>;
@@ -16,6 +24,8 @@ interface ChatInputProps {
   onStartRecording?: () => void;
   /** Called when user sends recording; returns audio file URI or null. */
   onStopRecording?: () => Promise<string | null>;
+  /** When provided, show recording timer and sync when recorder stops (e.g. at max duration). */
+  recordingState?: { isRecording: boolean; durationMillis: number };
 }
 
 export function ChatInput({
@@ -27,6 +37,7 @@ export function ChatInput({
   onPickVideo,
   onStartRecording,
   onStopRecording,
+  recordingState,
 }: ChatInputProps) {
   const [text, setText] = useState("");
   const [showAttach, setShowAttach] = useState(false);
@@ -34,9 +45,19 @@ export function ChatInput({
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
   const hasText = text.trim().length > 0;
+  const recorderIsRecording = recordingState?.isRecording ?? false;
+  const durationMillis = recordingState?.durationMillis ?? 0;
+  const durationSec = Math.floor(durationMillis / 1000);
+
+  // Sync local isRecording when recorder stops (e.g. auto-stop at 3 min)
+  useEffect(() => {
+    if (isRecording && !recorderIsRecording && durationSec > 0) {
+      setIsRecording(false);
+    }
+  }, [recorderIsRecording, durationSec, isRecording]);
 
   useEffect(() => {
-    if (!isRecording) {
+    if (!isRecording && !recorderIsRecording) {
       pulseAnim.setValue(1);
       return;
     }
@@ -48,7 +69,7 @@ export function ChatInput({
     );
     animation.start();
     return () => animation.stop();
-  }, [isRecording, pulseAnim]);
+  }, [isRecording, recorderIsRecording, pulseAnim]);
 
   const handleSend = () => {
     const trimmed = text.trim();
@@ -111,7 +132,10 @@ export function ChatInput({
     elevation: 4,
   };
 
-  if (isRecording) {
+  const showRecordingUI = isRecording || recorderIsRecording;
+
+  if (showRecordingUI) {
+    const atLimit = durationSec >= MAX_RECORDING_SECONDS;
     return (
       <View style={{ paddingHorizontal: 16, paddingVertical: 8 }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12, ...floatingStyle }}>
@@ -123,15 +147,22 @@ export function ChatInput({
               width: 10, height: 10, borderRadius: 5, backgroundColor: danger,
               transform: [{ scale: pulseAnim }],
             }} />
-            <Text style={{ fontSize: 14, color: danger, fontWeight: "600" }}>
-              {attachLabels?.recording ?? "Recording audio..."}
-            </Text>
+            <View>
+              <Text style={{ fontSize: 14, color: danger, fontWeight: "600" }}>
+                {attachLabels?.recording ?? "Recording audio..."}
+              </Text>
+              <Text style={{ fontSize: 12, color: theme?.textLight ?? inactive, marginTop: 2 }}>
+                {formatRecordingTime(durationSec)} / {formatRecordingTime(MAX_RECORDING_SECONDS)}
+                {atLimit ? ` ${attachLabels?.recordingMax ?? "(máx.)"}` : ""}
+              </Text>
+            </View>
           </View>
           <Pressable
             onPress={handleMicPress}
+            disabled={atLimit}
             style={{
               width: 44, height: 44, borderRadius: 22,
-              backgroundColor: primary,
+              backgroundColor: atLimit ? inactive : primary,
               alignItems: "center", justifyContent: "center",
             }}
           >
