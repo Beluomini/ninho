@@ -1,4 +1,4 @@
-import { View, Text, Pressable, ScrollView, Alert, Switch, TextInput, Modal } from "react-native";
+import { View, Text, Pressable, ScrollView, Alert, Switch, TextInput, Modal, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   User,
@@ -18,6 +18,7 @@ import { Card } from "../../src/components/ui/Card";
 import { Avatar } from "../../src/components/ui/Avatar";
 import { useSettings } from "../../src/contexts/SettingsContext";
 import { useTheme } from "../../src/hooks/useTheme";
+import { BIRD_IDS, BIRD_IMAGES } from "../../src/components/birds/index";
 import type { Locale } from "../../src/i18n";
 
 interface SettingsRowProps {
@@ -60,12 +61,13 @@ function SettingsRow({ icon, label, sublabel, onPress, right, theme }: SettingsR
 export default function SettingsScreen() {
   const { house, currentUser } = useHouseData();
   const {
-    t, i, locale, isDarkMode, userName, userPhoto,
-    setLocale, setDarkMode, setUserName,
+    t, i, locale, isDarkMode, userName, userBirdId,
+    setLocale, setDarkMode, setUserName, setUserBirdId,
   } = useSettings();
   const theme = useTheme();
 
   const [showNameModal, setShowNameModal] = useState(false);
+  const [showBirdModal, setShowBirdModal] = useState(false);
   const [editName, setEditName] = useState(userName);
 
   const handleSaveName = () => {
@@ -104,8 +106,18 @@ export default function SettingsScreen() {
         <View style={{ paddingHorizontal: 20, marginTop: 8, marginBottom: 16 }}>
           <Card theme={theme}>
             <View style={{ alignItems: "center", paddingVertical: 8 }}>
-              <Avatar uri={userPhoto} name={userName} size="lg" />
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 12 }}>
+              <Pressable onPress={() => setShowBirdModal(true)}>
+                <Avatar uri={userBirdId} name={userName} size="lg" />
+              </Pressable>
+              <Pressable
+                onPress={() => setShowBirdModal(true)}
+                style={{ marginTop: 8 }}
+              >
+                <Text style={{ fontSize: 12, color: theme.primary, fontWeight: "600" }}>
+                  {t.settings.yourBird} ›
+                </Text>
+              </Pressable>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 8 }}>
                 <Text style={{ fontSize: 18, fontWeight: "700", color: theme.text }}>
                   {userName}
                 </Text>
@@ -206,8 +218,8 @@ export default function SettingsScreen() {
           </Text>
           <Card theme={theme}>
             {house.members.map((member, idx) => {
-              const displayName = member.id === "u1" ? userName : member.name;
-              const displayPhoto = member.id === "u1" ? userPhoto : member.avatarUrl;
+              const displayName = member.id === currentUser.id ? userName : member.name;
+              const displayBirdId = member.id === currentUser.id ? userBirdId : member.birdId;
               return (
                 <View
                   key={member.id}
@@ -217,7 +229,7 @@ export default function SettingsScreen() {
                     borderBottomColor: theme.border + "30",
                   }}
                 >
-                  <Avatar uri={displayPhoto} name={displayName} size="md" />
+                  <Avatar uri={displayBirdId} name={displayName} size="md" />
                   <View style={{ flex: 1, marginLeft: 12 }}>
                     <Text style={{ fontSize: 14, fontWeight: "500", color: theme.text }}>
                       {displayName}
@@ -294,6 +306,74 @@ export default function SettingsScreen() {
             </View>
           </View>
         </View>
+      </Modal>
+
+      {/* Bird picker modal */}
+      <Modal visible={showBirdModal} transparent animationType="fade">
+        <Pressable
+          style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "center", paddingHorizontal: 24 }}
+          onPress={() => setShowBirdModal(false)}
+        >
+          <Pressable
+            style={{ backgroundColor: theme.surface, borderRadius: 20, padding: 24 }}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <Text style={{ fontSize: 18, fontWeight: "700", color: theme.text, marginBottom: 20, textAlign: "center" }}>
+              {t.settings.chooseBird}
+            </Text>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 16 }}>
+              {BIRD_IDS.map((id) => {
+                const imageSource = BIRD_IMAGES[id];
+                const selected = userBirdId === id;
+                return (
+                  <Pressable
+                    key={id}
+                    onPress={() => {
+                      setUserBirdId(id);
+                      setShowBirdModal(false);
+                    }}
+                    style={{
+                      width: 72,
+                      alignItems: "center",
+                      paddingVertical: 12,
+                      borderRadius: 16,
+                      backgroundColor: selected ? theme.primary + "20" : theme.inputBg,
+                      borderWidth: selected ? 2 : 0,
+                      borderColor: theme.primary,
+                    }}
+                  >
+                    <View style={{ width: 48, height: 48, borderRadius: 24, overflow: "hidden" }}>
+                      <Image
+                        source={imageSource}
+                        style={{ width: 48, height: 48 }}
+                        resizeMode="cover"
+                      />
+                    </View>
+                    <Text
+                      style={{
+                        fontSize: 11,
+                        fontWeight: selected ? "700" : "500",
+                        color: selected ? theme.primary : theme.text,
+                        marginTop: 6,
+                      }}
+                      numberOfLines={1}
+                    >
+                      {t.settings.birds[id as keyof typeof t.settings.birds]}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+            <Pressable
+              onPress={() => setShowBirdModal(false)}
+              style={{ marginTop: 20, paddingVertical: 12, borderRadius: 12, backgroundColor: theme.inputBg, alignItems: "center" }}
+            >
+              <Text style={{ fontSize: 14, fontWeight: "600", color: theme.textLight }}>
+                {t.settings.leaveCancel}
+              </Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
       </Modal>
     </SafeAreaView>
   );

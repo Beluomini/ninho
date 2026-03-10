@@ -11,19 +11,19 @@ export const users: User[] = [
   {
     id: "u1",
     name: "Lucas",
-    avatarUrl: "https://i.pravatar.cc/150?u=lucas",
+    birdId: "arara",
     email: "lucas@ninho.app",
   },
   {
     id: "u2",
     name: "Marina",
-    avatarUrl: "https://i.pravatar.cc/150?u=marina",
+    birdId: "beija-flor",
     email: "marina@ninho.app",
   },
   {
     id: "u3",
     name: "Pedro",
-    avatarUrl: "https://i.pravatar.cc/150?u=pedro",
+    birdId: "tucano",
     email: "pedro@ninho.app",
   },
 ];

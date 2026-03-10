@@ -14,7 +14,7 @@ import type { MessageMediaType } from "../../src/types";
 
 export default function BulletinScreen() {
   const { house, latestMessage, getUserById, postMessage } = useHouseData();
-  const { t, userName, userPhoto } = useSettings();
+  const { t, userName, userBirdId } = useSettings();
   const theme = useTheme();
   const recordingRef = useRef<Audio.Recording | null>(null);
   const soundRef = useRef<Audio.Sound | null>(null);
@@ -58,7 +58,7 @@ export default function BulletinScreen() {
   };
 
   const displayName = author?.id === "u1" ? userName : author?.name ?? "?";
-  const displayPhoto = author?.id === "u1" ? userPhoto : author?.avatarUrl;
+  const displayBirdId = author?.id === "u1" ? userBirdId : author?.birdId;
 
   const handleSend = useCallback(
     (content: string, mediaType?: MessageMediaType, mediaUrl?: string) => {
@@ -162,10 +162,10 @@ export default function BulletinScreen() {
             <View style={{ flexDirection: "row", marginTop: 12, gap: 12 }}>
               {house.members.map((member) => {
                 const mName = member.id === "u1" ? userName : member.name;
-                const mPhoto = member.id === "u1" ? userPhoto : member.avatarUrl;
+                const mBirdId = member.id === "u1" ? userBirdId : member.birdId;
                 return (
                   <View key={member.id} style={{ alignItems: "center", gap: 4 }}>
-                    <Avatar uri={mPhoto} name={mName} size="md" />
+                    <Avatar uri={mBirdId} name={mName} size="md" />
                     <Text style={{ fontSize: 11, color: theme.textLight }}>
                       {mName.split(" ")[0]}
                     </Text>
@@ -179,7 +179,7 @@ export default function BulletinScreen() {
           <View style={{ flex: 1, justifyContent: "center", paddingHorizontal: 20 }}>
             <Card theme={theme}>
               <View style={{ alignItems: "center", paddingVertical: 24, paddingHorizontal: 12, gap: 16 }}>
-                <Avatar uri={displayPhoto} name={displayName} size="lg" />
+                <Avatar uri={displayBirdId} name={displayName} size="lg" />
 
                 {latestMessage.mediaType === "image" && latestMessage.mediaUrl ? (
                   <Image

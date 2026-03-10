@@ -33,7 +33,7 @@ export default function ChoresScreen() {
     clearAllChores,
     clearCompletedChores,
   } = useHouseData();
-  const { t, i, userName, userPhoto, isDarkMode } = useSettings();
+  const { t, i, userName, userBirdId, isDarkMode } = useSettings();
   const theme = useTheme();
   const pickerThemeVariant = isDarkMode ? "dark" : "light";
   const [filterUser, setFilterUser] = useState<string | "all">("all");
@@ -109,9 +109,9 @@ export default function ChoresScreen() {
     );
   };
 
-  const getMemberDisplay = (member: { id: string; name: string; avatarUrl: string }) => ({
+  const getMemberDisplay = (member: { id: string; name: string; birdId: string }) => ({
     name: member.id === "u1" ? userName : member.name,
-    photo: member.id === "u1" ? userPhoto : member.avatarUrl,
+    birdId: member.id === "u1" ? userBirdId : member.birdId,
   });
 
   const chipMinWidth = 88;
@@ -183,7 +183,7 @@ export default function ChoresScreen() {
                 borderColor: theme.border,
               }}
             >
-              <Avatar uri={display.photo} name={display.name} size="sm" />
+              <Avatar uri={display.birdId} name={display.name} size="sm" />
               <Text
                 style={{
                   fontSize: 12,
@@ -208,7 +208,7 @@ export default function ChoresScreen() {
         ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
         renderItem={({ item }) => {
           const assignee = getUserById(item.assignedTo);
-          const display = assignee ? getMemberDisplay(assignee) : { name: "?", photo: undefined };
+          const display = assignee ? getMemberDisplay(assignee) : { name: "?", birdId: undefined };
           return (
             <Pressable onPress={() => toggleChore(item.id)}>
               <Card theme={theme} style={item.isCompleted ? { opacity: 0.6 } : undefined}>
@@ -240,7 +240,7 @@ export default function ChoresScreen() {
                     </View>
                   </View>
                   <View style={{ alignItems: "center", gap: 4 }}>
-                    <Avatar uri={display.photo} name={display.name} size="sm" />
+                    <Avatar uri={display.birdId} name={display.name} size="sm" />
                     <Badge
                       label={item.isCompleted ? t.chores.done : t.chores.pending}
                       variant={item.isCompleted ? "success" : "outline"}
@@ -331,7 +331,7 @@ export default function ChoresScreen() {
                         backgroundColor: newAssignee === m.id ? theme.primary : theme.inputBg,
                       }}
                     >
-                      <Avatar uri={display.photo} name={display.name} size="sm" />
+                      <Avatar uri={display.birdId} name={display.name} size="sm" />
                       <Text
                         style={{
                           fontSize: 12,

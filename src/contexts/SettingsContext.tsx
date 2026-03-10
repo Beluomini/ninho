@@ -7,14 +7,15 @@ const STORAGE_KEYS = {
   LOCALE: "@ninho/locale",
   DARK_MODE: "@ninho/darkMode",
   USER_NAME: "@ninho/userName",
-  USER_PHOTO: "@ninho/userPhoto",
+  USER_BIRD: "@ninho/userBird",
 } as const;
 
 interface SettingsState {
   locale: Locale;
   isDarkMode: boolean;
   userName: string;
-  userPhoto: string;
+  /** Id do pássaro escolhido (arara, tucano, etc.) */
+  userBirdId: string;
   isLoaded: boolean;
 }
 
@@ -24,7 +25,7 @@ interface SettingsContextValue extends SettingsState {
   setLocale: (locale: Locale) => void;
   setDarkMode: (enabled: boolean) => void;
   setUserName: (name: string) => void;
-  setUserPhoto: (uri: string) => void;
+  setUserBirdId: (birdId: string) => void;
 }
 
 const SettingsContext = createContext<SettingsContextValue | null>(null);
@@ -34,25 +35,25 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     locale: "pt",
     isDarkMode: false,
     userName: "Lucas",
-    userPhoto: "https://i.pravatar.cc/150?u=lucas",
+    userBirdId: "arara",
     isLoaded: false,
   });
 
   useEffect(() => {
     (async () => {
       try {
-        const [locale, darkMode, userName, userPhoto] = await Promise.all([
+        const [locale, darkMode, userName, userBird] = await Promise.all([
           AsyncStorage.getItem(STORAGE_KEYS.LOCALE),
           AsyncStorage.getItem(STORAGE_KEYS.DARK_MODE),
           AsyncStorage.getItem(STORAGE_KEYS.USER_NAME),
-          AsyncStorage.getItem(STORAGE_KEYS.USER_PHOTO),
+          AsyncStorage.getItem(STORAGE_KEYS.USER_BIRD),
         ]);
         setState((prev) => ({
           ...prev,
           locale: (locale as Locale) || "pt",
           isDarkMode: darkMode === "true",
           userName: userName || prev.userName,
-          userPhoto: userPhoto || prev.userPhoto,
+          userBirdId: userBird || prev.userBirdId,
           isLoaded: true,
         }));
       } catch {
@@ -82,9 +83,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     persist(STORAGE_KEYS.USER_NAME, name);
   }, [persist]);
 
-  const setUserPhoto = useCallback((uri: string) => {
-    setState((prev) => ({ ...prev, userPhoto: uri }));
-    persist(STORAGE_KEYS.USER_PHOTO, uri);
+  const setUserBirdId = useCallback((birdId: string) => {
+    setState((prev) => ({ ...prev, userBirdId: birdId }));
+    persist(STORAGE_KEYS.USER_BIRD, birdId);
   }, [persist]);
 
   const t = getTranslations(state.locale);
@@ -98,7 +99,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         setLocale,
         setDarkMode,
         setUserName,
-        setUserPhoto,
+        setUserBirdId,
       }}
     >
       {children}

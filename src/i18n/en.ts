@@ -112,5 +112,15 @@ export const en = {
     namePlaceholder: "Your name",
     saveBtn: "Save",
     profile: "Profile",
+    yourBird: "Your bird",
+    chooseBird: "Choose your bird",
+    birds: {
+      arara: "Macaw",
+      "pica-pau": "Woodpecker",
+      tucano: "Toucan",
+      "beija-flor": "Hummingbird",
+      pomba: "Dove",
+      canario: "Canary",
+    },
   },
 };

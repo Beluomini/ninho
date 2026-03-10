@@ -112,5 +112,15 @@ export const pt = {
     namePlaceholder: "Seu nome",
     saveBtn: "Salvar",
     profile: "Perfil",
+    yourBird: "Seu pássaro",
+    chooseBird: "Escolha seu pássaro",
+    birds: {
+      arara: "Arara",
+      "pica-pau": "Pica-pau",
+      tucano: "Tucano",
+      "beija-flor": "Beija-flor",
+      pomba: "Pomba",
+      canario: "Canário",
+    },
   },
 };

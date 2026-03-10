@@ -1,7 +1,8 @@
 export interface User {
   id: string;
   name: string;
-  avatarUrl: string;
+  /** Id do pássaro (arara, tucano, etc.) para exibir como avatar */
+  birdId: string;
   email: string;
 }
 
