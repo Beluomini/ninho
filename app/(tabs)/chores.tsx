@@ -8,15 +8,18 @@ import {
   Modal,
   Alert,
   Platform,
+  Animated,
+  Vibration,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { CalendarDays, RotateCw, Plus, Trash2, CheckCircle } from "lucide-react-native";
+import { CalendarDays, RotateCw, Plus, Trash2, CheckCircle, PartyPopper } from "lucide-react-native";
 import { useHouseData } from "../../src/hooks/useHouseData";
 import { Card } from "../../src/components/ui/Card";
 import { Avatar } from "../../src/components/ui/Avatar";
 import { Badge } from "../../src/components/ui/Badge";
+import { SwipeableRow } from "../../src/components/ui/SwipeableRow";
 import { useSettings } from "../../src/contexts/SettingsContext";
 import { useTheme } from "../../src/hooks/useTheme";
 import type { Chore } from "../../src/types";
@@ -30,6 +33,7 @@ export default function ChoresScreen() {
     getUserById,
     toggleChore,
     addChore,
+    removeChore,
     clearAllChores,
     clearCompletedChores,
   } = useHouseData();
@@ -49,10 +53,41 @@ export default function ChoresScreen() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
 
+  // Celebration state
+  const [showCelebration, setShowCelebration] = useState(false);
+  const celebrationOpacity = useRef(new Animated.Value(0)).current;
+  const celebrationScale = useRef(new Animated.Value(0.5)).current;
+  const prevAllCompletedRef = useRef(false);
+
   const filtered =
     filterUser === "all"
       ? chores
       : chores.filter((c) => c.assignedTo === filterUser);
+
+  const completedCount = filtered.filter((c) => c.isCompleted).length;
+  const totalCount = filtered.length;
+  const progress = totalCount > 0 ? completedCount / totalCount : 0;
+  const allCompleted = totalCount > 0 && completedCount === totalCount;
+
+  useEffect(() => {
+    if (allCompleted && !prevAllCompletedRef.current && totalCount > 0) {
+      setShowCelebration(true);
+      Vibration.vibrate(300);
+      celebrationOpacity.setValue(0);
+      celebrationScale.setValue(0.5);
+      Animated.parallel([
+        Animated.timing(celebrationOpacity, { toValue: 1, duration: 400, useNativeDriver: true }),
+        Animated.spring(celebrationScale, { toValue: 1, useNativeDriver: true, tension: 50, friction: 6 }),
+      ]).start(() => {
+        setTimeout(() => {
+          Animated.timing(celebrationOpacity, { toValue: 0, duration: 600, useNativeDriver: true }).start(() => {
+            setShowCelebration(false);
+          });
+        }, 2000);
+      });
+    }
+    prevAllCompletedRef.current = allCompleted;
+  }, [allCompleted, totalCount]);
 
   const recurrenceOptions: ChoreRecurrence[] = ["once", "daily", "weekly", "monthly"];
   const recurrenceLabels: Record<ChoreRecurrence, string> = {
@@ -114,6 +149,13 @@ export default function ChoresScreen() {
     birdId: member.id === "u1" ? userBirdId : member.birdId,
   });
 
+  const swipeProps = {
+    confirmTitle: t.chores.deleteConfirmTitle,
+    confirmMsg: t.chores.deleteConfirmMsg,
+    cancelLabel: t.chores.cancel,
+    deleteLabel: t.chores.delete,
+  };
+
   const chipMinWidth = 88;
 
   return (
@@ -128,7 +170,30 @@ export default function ChoresScreen() {
         </Text>
       </View>
 
-      {/* Member filter - fixed height so it never grows when list is empty */}
+      {/* Progress bar */}
+      {totalCount > 0 && (
+        <View style={{ paddingHorizontal: 20, marginBottom: 12 }}>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 6 }}>
+            <Text style={{ fontSize: 12, fontWeight: "600", color: theme.textLight }}>
+              {t.chores.progress}
+            </Text>
+            <Text style={{ fontSize: 12, fontWeight: "700", color: allCompleted ? theme.success : theme.primary }}>
+              {completedCount}/{totalCount}
+            </Text>
+          </View>
+          <View style={{
+            height: 8, borderRadius: 4, backgroundColor: theme.inputBg, overflow: "hidden",
+          }}>
+            <View style={{
+              height: 8, borderRadius: 4,
+              width: `${progress * 100}%`,
+              backgroundColor: allCompleted ? theme.success : theme.primary,
+            }} />
+          </View>
+        </View>
+      )}
+
+      {/* Member filter */}
       <View style={{ height: 44, marginBottom: 8 }}>
         <ScrollView
           horizontal
@@ -210,46 +275,48 @@ export default function ChoresScreen() {
           const assignee = getUserById(item.assignedTo);
           const display = assignee ? getMemberDisplay(assignee) : { name: "?", birdId: undefined };
           return (
-            <Pressable onPress={() => toggleChore(item.id)}>
-              <Card theme={theme} style={item.isCompleted ? { opacity: 0.6 } : undefined}>
-                <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                  <View style={{ flex: 1, gap: 8 }}>
-                    <Text
-                      style={{
-                        fontSize: 16,
-                        fontWeight: "600",
-                        color: item.isCompleted ? theme.inactive : theme.text,
-                        textDecorationLine: item.isCompleted ? "line-through" : "none",
-                      }}
-                    >
-                      {item.title}
-                    </Text>
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-                      <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                        <CalendarDays size={13} color={theme.textLight} />
-                        <Text style={{ fontSize: 12, color: theme.textLight }}>
-                          {formatDate(item.dueDate)} {formatTime(item.dueDate)}
-                        </Text>
-                      </View>
-                      <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                        <RotateCw size={13} color={theme.textLight} />
-                        <Text style={{ fontSize: 12, color: theme.textLight }}>
-                          {recurrenceLabels[item.recurrence]}
-                        </Text>
+            <SwipeableRow {...swipeProps} onDelete={() => removeChore(item.id)}>
+              <Pressable onPress={() => toggleChore(item.id)}>
+                <Card theme={theme} style={item.isCompleted ? { opacity: 0.6 } : undefined}>
+                  <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                    <View style={{ flex: 1, gap: 8 }}>
+                      <Text
+                        style={{
+                          fontSize: 16,
+                          fontWeight: "600",
+                          color: item.isCompleted ? theme.inactive : theme.text,
+                          textDecorationLine: item.isCompleted ? "line-through" : "none",
+                        }}
+                      >
+                        {item.title}
+                      </Text>
+                      <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                          <CalendarDays size={13} color={theme.textLight} />
+                          <Text style={{ fontSize: 12, color: theme.textLight }}>
+                            {formatDate(item.dueDate)} {formatTime(item.dueDate)}
+                          </Text>
+                        </View>
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                          <RotateCw size={13} color={theme.textLight} />
+                          <Text style={{ fontSize: 12, color: theme.textLight }}>
+                            {recurrenceLabels[item.recurrence]}
+                          </Text>
+                        </View>
                       </View>
                     </View>
+                    <View style={{ alignItems: "center", gap: 4 }}>
+                      <Avatar uri={display.birdId} name={display.name} size="sm" />
+                      <Badge
+                        label={item.isCompleted ? t.chores.done : t.chores.pending}
+                        variant={item.isCompleted ? "success" : "outline"}
+                        theme={theme}
+                      />
+                    </View>
                   </View>
-                  <View style={{ alignItems: "center", gap: 4 }}>
-                    <Avatar uri={display.birdId} name={display.name} size="sm" />
-                    <Badge
-                      label={item.isCompleted ? t.chores.done : t.chores.pending}
-                      variant={item.isCompleted ? "success" : "outline"}
-                      theme={theme}
-                    />
-                  </View>
-                </View>
-              </Card>
-            </Pressable>
+                </Card>
+              </Pressable>
+            </SwipeableRow>
           );
         }}
       />
@@ -493,7 +560,7 @@ export default function ChoresScreen() {
         </Pressable>
       </Modal>
 
-      {/* Bottom: três botões flutuantes separados */}
+      {/* Bottom buttons */}
       {!showAddForm && (
         <View
           style={{
@@ -510,7 +577,6 @@ export default function ChoresScreen() {
             gap: 10,
           }}
         >
-          {/* Limpar concluídas - View sem flex para largura seguir o conteúdo */}
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             <Pressable
               onPress={handleClearCompleted}
@@ -537,7 +603,6 @@ export default function ChoresScreen() {
               </Text>
             </Pressable>
           </View>
-          {/* Limpar tudo */}
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             <Pressable
               onPress={handleClearAll}
@@ -564,7 +629,6 @@ export default function ChoresScreen() {
               </Text>
             </Pressable>
           </View>
-          {/* Adicionar */}
           <Pressable
             onPress={() => setShowAddForm(true)}
             style={{
@@ -584,6 +648,43 @@ export default function ChoresScreen() {
             <Plus size={24} color="#fff" />
           </Pressable>
         </View>
+      )}
+
+      {/* All-completed celebration overlay */}
+      {showCelebration && (
+        <Animated.View
+          pointerEvents="none"
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: "rgba(0,0,0,0.3)",
+            opacity: celebrationOpacity,
+          }}
+        >
+          <Animated.View style={{
+            transform: [{ scale: celebrationScale }],
+            alignItems: "center",
+            gap: 16,
+            backgroundColor: theme.surface,
+            paddingHorizontal: 40,
+            paddingVertical: 32,
+            borderRadius: 24,
+            shadowColor: "#000",
+            shadowOpacity: 0.2,
+            shadowRadius: 20,
+            elevation: 10,
+          }}>
+            <PartyPopper size={56} color="#F59E0B" />
+            <Text style={{ fontSize: 20, fontWeight: "800", color: theme.text, textAlign: "center" }}>
+              {t.chores.allCompleted}
+            </Text>
+          </Animated.View>
+        </Animated.View>
       )}
     </SafeAreaView>
   );

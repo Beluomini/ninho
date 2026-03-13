@@ -70,3 +70,31 @@ export interface Chore {
   isCompleted: boolean;
   recurrence: "daily" | "weekly" | "monthly" | "once";
 }
+
+export type RecurringFinanceRecurrence = "daily" | "weekly" | "monthly" | "custom";
+
+export interface RecurringItem {
+  id: string;
+  description: string;
+  amount: number;
+  recurrence: RecurringFinanceRecurrence;
+  customDays?: number;
+  startDate: Date;
+  type: "income" | "expense";
+  category?: string;
+}
+
+export interface InvestmentContribution {
+  id: string;
+  amount: number;
+  date: Date;
+}
+
+export interface InvestmentGoal {
+  id: string;
+  name: string;
+  currentAmount: number;
+  targetAmount?: number;
+  contributions: InvestmentContribution[];
+  goalReachedShown?: boolean;
+}

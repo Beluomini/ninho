@@ -7,6 +7,8 @@ import type {
   ShoppingItem,
   Transaction,
   Chore,
+  RecurringItem,
+  InvestmentGoal,
 } from "../types";
 import * as mock from "../data/mock";
 
@@ -17,6 +19,10 @@ export function useHouseData() {
   const [shoppingItems, setShoppingItems] = useState<ShoppingItem[]>(mock.shoppingItems);
   const [transactions, setTransactions] = useState<Transaction[]>(mock.transactions);
   const [chores, setChores] = useState<Chore[]>(mock.chores);
+  const [initialBalance, setInitialBalanceState] = useState<number>(0);
+  const [onboardingDone, setOnboardingDoneState] = useState<boolean>(false);
+  const [recurringItems, setRecurringItems] = useState<RecurringItem[]>([]);
+  const [investmentGoals, setInvestmentGoals] = useState<InvestmentGoal[]>([]);
 
   const getUserById = useCallback(
     (id: string) => house.members.find((u) => u.id === id),
@@ -102,6 +108,10 @@ export function useHouseData() {
     []
   );
 
+  const removeChore = useCallback((id: string) => {
+    setChores((prev) => prev.filter((c) => c.id !== id));
+  }, []);
+
   const clearAllChores = useCallback(() => {
     setChores([]);
   }, []);
@@ -110,7 +120,98 @@ export function useHouseData() {
     setChores((prev) => prev.filter((c) => !c.isCompleted));
   }, []);
 
-  const balance = transactions.reduce((sum, t) => sum + t.amount, 0);
+  const setInitialBalance = useCallback((value: number) => {
+    setInitialBalanceState(value);
+  }, []);
+
+  const setOnboardingDone = useCallback((done: boolean) => {
+    setOnboardingDoneState(done);
+  }, []);
+
+  const addRecurringItem = useCallback(
+    (data: Omit<RecurringItem, "id">) => {
+      const item: RecurringItem = {
+        ...data,
+        id: `r${Date.now()}`,
+      };
+      setRecurringItems((prev) => [...prev, item]);
+    },
+    []
+  );
+
+  const removeRecurringItem = useCallback((id: string) => {
+    setRecurringItems((prev) => prev.filter((r) => r.id !== id));
+  }, []);
+
+  const removeTransaction = useCallback((id: string) => {
+    setTransactions((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
+  const addInvestmentGoal = useCallback(
+    (name: string, targetAmount?: number) => {
+      const goal: InvestmentGoal = {
+        id: `g${Date.now()}`,
+        name,
+        currentAmount: 0,
+        targetAmount,
+        contributions: [],
+      };
+      setInvestmentGoals((prev) => [...prev, goal]);
+    },
+    []
+  );
+
+  const addInvestmentContribution = useCallback((goalId: string, amount: number) => {
+    setInvestmentGoals((prev) =>
+      prev.map((g) => {
+        if (g.id !== goalId) return g;
+        const contribution = { id: `ic${Date.now()}`, amount, date: new Date() };
+        return {
+          ...g,
+          currentAmount: g.currentAmount + amount,
+          contributions: [...g.contributions, contribution],
+        };
+      })
+    );
+  }, []);
+
+  const removeInvestmentContribution = useCallback((goalId: string, contributionId: string) => {
+    setInvestmentGoals((prev) =>
+      prev.map((g) => {
+        if (g.id !== goalId) return g;
+        const contrib = g.contributions.find((c) => c.id === contributionId);
+        if (!contrib) return g;
+        return {
+          ...g,
+          currentAmount: g.currentAmount - contrib.amount,
+          contributions: g.contributions.filter((c) => c.id !== contributionId),
+        };
+      })
+    );
+  }, []);
+
+  const updateInvestmentGoal = useCallback(
+    (goalId: string, updates: { name?: string; targetAmount?: number }) => {
+      setInvestmentGoals((prev) =>
+        prev.map((g) => (g.id === goalId ? { ...g, ...updates } : g))
+      );
+    },
+    []
+  );
+
+  const removeInvestmentGoal = useCallback((id: string) => {
+    setInvestmentGoals((prev) => prev.filter((g) => g.id !== id));
+  }, []);
+
+  const markGoalReachedShown = useCallback((goalId: string) => {
+    setInvestmentGoals((prev) =>
+      prev.map((g) => (g.id === goalId ? { ...g, goalReachedShown: true } : g))
+    );
+  }, []);
+
+  const balance = onboardingDone
+    ? initialBalance + transactions.reduce((sum, t) => sum + t.amount, 0)
+    : 0;
 
   return {
     house,
@@ -120,6 +221,10 @@ export function useHouseData() {
     transactions,
     chores,
     balance,
+    initialBalance,
+    onboardingDone,
+    recurringItems,
+    investmentGoals,
     getUserById,
     postMessage,
     addShoppingItem,
@@ -128,7 +233,19 @@ export function useHouseData() {
     addTransaction,
     toggleChore,
     addChore,
+    removeChore,
     clearAllChores,
     clearCompletedChores,
+    setInitialBalance,
+    setOnboardingDone,
+    addRecurringItem,
+    removeRecurringItem,
+    removeTransaction,
+    addInvestmentGoal,
+    addInvestmentContribution,
+    removeInvestmentContribution,
+    updateInvestmentGoal,
+    removeInvestmentGoal,
+    markGoalReachedShown,
   };
 }

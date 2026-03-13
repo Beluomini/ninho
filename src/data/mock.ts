@@ -61,16 +61,7 @@ export const shoppingItems: ShoppingItem[] = [
   { id: "s15", name: "Agua Sanitaria", category: "cleaning", quantity: 1, unit: "L", isCompleted: false, addedBy: "u1" },
 ];
 
-export const transactions: Transaction[] = [
-  { id: "t1", description: "Aluguel", amount: -2400, category: "Moradia", date: new Date("2026-03-01"), paidBy: "u1", type: "expense" },
-  { id: "t2", description: "Conta de Luz", amount: -187.5, category: "Utilidades", date: new Date("2026-03-04"), paidBy: "u1", type: "expense" },
-  { id: "t3", description: "Conta de Agua", amount: -95.3, category: "Utilidades", date: new Date("2026-03-03"), paidBy: "u2", type: "expense" },
-  { id: "t4", description: "Internet", amount: -120, category: "Utilidades", date: new Date("2026-03-01"), paidBy: "u3", type: "expense" },
-  { id: "t5", description: "Contribuicao mensal - Lucas", amount: 1500, category: "Renda", date: new Date("2026-03-01"), paidBy: "u1", type: "income" },
-  { id: "t6", description: "Contribuicao mensal - Marina", amount: 1500, category: "Renda", date: new Date("2026-03-01"), paidBy: "u2", type: "income" },
-  { id: "t7", description: "Contribuicao mensal - Pedro", amount: 1500, category: "Renda", date: new Date("2026-03-01"), paidBy: "u3", type: "income" },
-  { id: "t8", description: "Supermercado", amount: -347.8, category: "Alimentacao", date: new Date("2026-03-02"), paidBy: "u2", type: "expense" },
-];
+export const transactions: Transaction[] = [];
 
 export const chores: Chore[] = [
   { id: "c1", title: "Limpar cozinha", assignedTo: "u3", dueDate: new Date("2026-03-06"), isCompleted: true, recurrence: "daily" },
