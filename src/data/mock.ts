@@ -64,10 +64,10 @@ export const shoppingItems: ShoppingItem[] = [
 export const transactions: Transaction[] = [];
 
 export const chores: Chore[] = [
-  { id: "c1", title: "Limpar cozinha", assignedTo: "u3", dueDate: new Date("2026-03-06"), isCompleted: true, recurrence: "daily" },
-  { id: "c2", title: "Lavar banheiro", assignedTo: "u2", dueDate: new Date("2026-03-07"), isCompleted: false, recurrence: "weekly" },
-  { id: "c3", title: "Aspirar sala", assignedTo: "u1", dueDate: new Date("2026-03-06"), isCompleted: false, recurrence: "weekly" },
-  { id: "c4", title: "Levar lixo para fora", assignedTo: "u3", dueDate: new Date("2026-03-06"), isCompleted: false, recurrence: "daily" },
-  { id: "c5", title: "Lavar roupas", assignedTo: "u1", dueDate: new Date("2026-03-08"), isCompleted: false, recurrence: "weekly" },
-  { id: "c6", title: "Organizar despensa", assignedTo: "u2", dueDate: new Date("2026-03-10"), isCompleted: false, recurrence: "monthly" },
+  { id: "c1", title: "Limpar cozinha", assignedTo: ["u3"], dueDate: new Date("2026-03-06"), isCompleted: true, recurrence: "daily" },
+  { id: "c2", title: "Lavar banheiro", assignedTo: ["u2"], dueDate: new Date("2026-03-07"), isCompleted: false, recurrence: "weekly" },
+  { id: "c3", title: "Aspirar sala", assignedTo: ["u1"], dueDate: new Date("2026-03-06"), isCompleted: false, recurrence: "weekly" },
+  { id: "c4", title: "Levar lixo para fora", assignedTo: ["u3"], dueDate: new Date("2026-03-06"), isCompleted: false, recurrence: "daily" },
+  { id: "c5", title: "Lavar roupas", assignedTo: ["u1", "u2"], dueDate: new Date("2026-03-08"), isCompleted: false, recurrence: "weekly" },
+  { id: "c6", title: "Organizar despensa", assignedTo: ["u2"], dueDate: new Date("2026-03-10"), isCompleted: false, recurrence: "monthly" },
 ];

@@ -1,5 +1,6 @@
-import { View, Text, Pressable, ScrollView, Alert, Switch, TextInput, Modal, Image } from "react-native";
+import { View, Text, Pressable, ScrollView, Alert, Switch, TextInput, Modal, Image, Keyboard, KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useKeyboardVisible } from "../../src/hooks/useKeyboardVisible";
 import {
   User,
   Home,
@@ -65,6 +66,7 @@ export default function SettingsScreen() {
     setLocale, setDarkMode, setUserName, setUserBirdId,
   } = useSettings();
   const theme = useTheme();
+  const { dismissIfVisible } = useKeyboardVisible();
 
   const [showNameModal, setShowNameModal] = useState(false);
   const [showBirdModal, setShowBirdModal] = useState(false);
@@ -269,8 +271,12 @@ export default function SettingsScreen() {
 
       {/* Edit name modal */}
       <Modal visible={showNameModal} transparent animationType="fade">
-        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "center", paddingHorizontal: 32 }}>
-          <View style={{ backgroundColor: theme.surface, borderRadius: 20, padding: 24 }}>
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+          <Pressable
+            style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "center", paddingHorizontal: 32 }}
+            onPress={() => { if (!dismissIfVisible()) setShowNameModal(false); }}
+          >
+            <Pressable style={{ backgroundColor: theme.surface, borderRadius: 20, padding: 24 }} onPress={() => dismissIfVisible()}>
             <Text style={{ fontSize: 18, fontWeight: "700", color: theme.text, marginBottom: 16 }}>
               {t.settings.editName}
             </Text>
@@ -304,8 +310,9 @@ export default function SettingsScreen() {
                 </Text>
               </Pressable>
             </View>
-          </View>
-        </View>
+          </Pressable>
+        </Pressable>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* Bird picker modal */}

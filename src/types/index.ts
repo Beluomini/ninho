@@ -56,16 +56,19 @@ export interface Transaction {
   id: string;
   description: string;
   amount: number;
-  category: string;
+  tag: string;
+  subtag?: string;
   date: Date;
   paidBy: string;
   type: "income" | "expense" | "investment";
 }
 
+export type TagMap = Record<string, string[]>;
+
 export interface Chore {
   id: string;
   title: string;
-  assignedTo: string;
+  assignedTo: string[];
   dueDate: Date;
   isCompleted: boolean;
   recurrence: "daily" | "weekly" | "monthly" | "once";

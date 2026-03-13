@@ -9,6 +9,7 @@ import type {
   Chore,
   RecurringItem,
   InvestmentGoal,
+  TagMap,
 } from "../types";
 import * as mock from "../data/mock";
 
@@ -23,6 +24,16 @@ export function useHouseData() {
   const [onboardingDone, setOnboardingDoneState] = useState<boolean>(false);
   const [recurringItems, setRecurringItems] = useState<RecurringItem[]>([]);
   const [investmentGoals, setInvestmentGoals] = useState<InvestmentGoal[]>([]);
+  const [tags, setTags] = useState<TagMap>({
+    Geral: [],
+    Moradia: ["Aluguel", "Condomínio", "IPTU"],
+    Utilidades: ["Energia", "Água", "Internet", "Gás"],
+    Alimentação: ["Mercado", "Restaurante", "Delivery"],
+    Renda: ["Salário", "Freelance", "Investimento"],
+    Transporte: ["Combustível", "Uber", "Ônibus", "Manutenção"],
+    Lazer: ["Cinema", "Viagem", "Streaming"],
+    Saúde: ["Consulta", "Medicamento", "Plano de saúde"],
+  });
 
   const getUserById = useCallback(
     (id: string) => house.members.find((u) => u.id === id),
@@ -94,7 +105,7 @@ export function useHouseData() {
   type ChoreRecurrence = Chore["recurrence"];
 
   const addChore = useCallback(
-    (title: string, assignedTo: string, dueDate: Date, recurrence: ChoreRecurrence) => {
+    (title: string, assignedTo: string[], dueDate: Date, recurrence: ChoreRecurrence) => {
       const chore: Chore = {
         id: `c${Date.now()}`,
         title,
@@ -209,6 +220,21 @@ export function useHouseData() {
     );
   }, []);
 
+  const addTag = useCallback((tagName: string) => {
+    setTags((prev) => {
+      if (prev[tagName] !== undefined) return prev;
+      return { ...prev, [tagName]: [] };
+    });
+  }, []);
+
+  const addSubtag = useCallback((tagName: string, subtagName: string) => {
+    setTags((prev) => {
+      const existing = prev[tagName] ?? [];
+      if (existing.includes(subtagName)) return prev;
+      return { ...prev, [tagName]: [...existing, subtagName] };
+    });
+  }, []);
+
   const balance = onboardingDone
     ? initialBalance + transactions.reduce((sum, t) => sum + t.amount, 0)
     : 0;
@@ -247,5 +273,8 @@ export function useHouseData() {
     updateInvestmentGoal,
     removeInvestmentGoal,
     markGoalReachedShown,
+    tags,
+    addTag,
+    addSubtag,
   };
 }

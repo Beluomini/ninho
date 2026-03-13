@@ -10,9 +10,12 @@ import {
   Platform,
   Animated,
   Vibration,
+  Keyboard,
+  KeyboardAvoidingView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useState, useEffect, useRef } from "react";
+import { useKeyboardVisible } from "../../src/hooks/useKeyboardVisible";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { CalendarDays, RotateCw, Plus, Trash2, CheckCircle, PartyPopper } from "lucide-react-native";
 import { useHouseData } from "../../src/hooks/useHouseData";
@@ -39,19 +42,19 @@ export default function ChoresScreen() {
   } = useHouseData();
   const { t, i, userName, userBirdId, isDarkMode } = useSettings();
   const theme = useTheme();
+  const { dismissIfVisible } = useKeyboardVisible();
   const pickerThemeVariant = isDarkMode ? "dark" : "light";
   const [filterUser, setFilterUser] = useState<string | "all">("all");
   const [showAddForm, setShowAddForm] = useState(false);
   const [newTitle, setNewTitle] = useState("");
-  const [newAssignee, setNewAssignee] = useState(house.members[0]?.id ?? "");
+  const [newAssignees, setNewAssignees] = useState<string[]>(house.members.length > 0 ? [house.members[0].id] : []);
   const [newDueDate, setNewDueDate] = useState(() => {
     const d = new Date();
     d.setHours(18, 0, 0, 0);
     return d;
   });
   const [newRecurrence, setNewRecurrence] = useState<ChoreRecurrence>("once");
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [activePicker, setActivePicker] = useState<"none" | "date" | "time">("none");
 
   // Celebration state
   const [showCelebration, setShowCelebration] = useState(false);
@@ -62,7 +65,7 @@ export default function ChoresScreen() {
   const filtered =
     filterUser === "all"
       ? chores
-      : chores.filter((c) => c.assignedTo === filterUser);
+      : chores.filter((c) => c.assignedTo.includes(filterUser));
 
   const completedCount = filtered.filter((c) => c.isCompleted).length;
   const totalCount = filtered.length;
@@ -104,20 +107,28 @@ export default function ChoresScreen() {
       .padStart(2, "0")}`;
   };
 
+  const formatDateWithYear = (date: Date) => {
+    const d = new Date(date);
+    return `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1)
+      .toString()
+      .padStart(2, "0")}/${d.getFullYear()}`;
+  };
+
   const formatTime = (date: Date) => {
     const d = new Date(date);
     return `${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`;
   };
 
   const handleAddChore = () => {
-    if (!newTitle.trim()) return;
-    addChore(newTitle.trim(), newAssignee, newDueDate, newRecurrence);
+    if (!newTitle.trim() || newAssignees.length === 0) return;
+    addChore(newTitle.trim(), newAssignees, newDueDate, newRecurrence);
     setNewTitle("");
     setNewDueDate(() => {
       const d = new Date();
       d.setHours(18, 0, 0, 0);
       return d;
     });
+    setNewAssignees(house.members.length > 0 ? [house.members[0].id] : []);
     setNewRecurrence("once");
     setShowAddForm(false);
   };
@@ -272,8 +283,10 @@ export default function ChoresScreen() {
         contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 120 }}
         ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
         renderItem={({ item }) => {
-          const assignee = getUserById(item.assignedTo);
-          const display = assignee ? getMemberDisplay(assignee) : { name: "?", birdId: undefined };
+          const assignees = item.assignedTo.map((id) => {
+            const member = getUserById(id);
+            return member ? getMemberDisplay(member) : { name: "?", birdId: undefined };
+          });
           return (
             <SwipeableRow {...swipeProps} onDelete={() => removeChore(item.id)}>
               <Pressable onPress={() => toggleChore(item.id)}>
@@ -306,7 +319,13 @@ export default function ChoresScreen() {
                       </View>
                     </View>
                     <View style={{ alignItems: "center", gap: 4 }}>
-                      <Avatar uri={display.birdId} name={display.name} size="sm" />
+                      <View style={{ flexDirection: "row" }}>
+                        {assignees.map((display, idx) => (
+                          <View key={idx} style={{ marginLeft: idx > 0 ? -8 : 0, zIndex: assignees.length - idx }}>
+                            <Avatar uri={display.birdId} name={display.name} size="sm" />
+                          </View>
+                        ))}
+                      </View>
                       <Badge
                         label={item.isCompleted ? t.chores.done : t.chores.pending}
                         variant={item.isCompleted ? "success" : "outline"}
@@ -328,31 +347,32 @@ export default function ChoresScreen() {
         animationType="fade"
         onRequestClose={() => setShowAddForm(false)}
       >
-        <Pressable
-          style={{
-            flex: 1,
-            backgroundColor: "rgba(0,0,0,0.5)",
-            justifyContent: "center",
-            alignItems: "center",
-            padding: 24,
-          }}
-          onPress={() => setShowAddForm(false)}
-        >
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
           <Pressable
             style={{
-              width: "100%",
-              maxWidth: 360,
-              backgroundColor: theme.surface,
-              borderRadius: 16,
-              padding: 20,
-              borderWidth: 1,
-              borderColor: theme.border,
-              shadowColor: "#000",
-              shadowOpacity: 0.15,
-              shadowRadius: 12,
-              elevation: 8,
+              flex: 1,
+              backgroundColor: "rgba(0,0,0,0.5)",
+              justifyContent: "center",
+              alignItems: "center",
+              padding: 24,
             }}
-            onPress={(e) => e.stopPropagation()}
+            onPress={() => { if (!dismissIfVisible()) setShowAddForm(false); }}
+          >
+            <Pressable
+              style={{
+                width: "100%",
+                maxWidth: 360,
+                backgroundColor: theme.surface,
+                borderRadius: 16,
+                padding: 20,
+                borderWidth: 1,
+                borderColor: theme.border,
+                shadowColor: "#000",
+                shadowOpacity: 0.15,
+                shadowRadius: 12,
+                elevation: 8,
+              }}
+              onPress={() => dismissIfVisible()}
           >
             <Text style={{ fontSize: 18, fontWeight: "700", color: theme.text, marginBottom: 16 }}>
               {t.chores.newChore}
@@ -384,10 +404,17 @@ export default function ChoresScreen() {
               <View style={{ flexDirection: "row", gap: 8 }}>
                 {house.members.map((m) => {
                   const display = getMemberDisplay(m);
+                  const isSelected = newAssignees.includes(m.id);
                   return (
                     <Pressable
                       key={m.id}
-                      onPress={() => setNewAssignee(m.id)}
+                      onPress={() =>
+                        setNewAssignees((prev) =>
+                          prev.includes(m.id)
+                            ? prev.filter((id) => id !== m.id)
+                            : [...prev, m.id]
+                        )
+                      }
                       style={{
                         flexDirection: "row",
                         alignItems: "center",
@@ -395,7 +422,7 @@ export default function ChoresScreen() {
                         paddingHorizontal: 12,
                         paddingVertical: 8,
                         borderRadius: 20,
-                        backgroundColor: newAssignee === m.id ? theme.primary : theme.inputBg,
+                        backgroundColor: isSelected ? theme.primary : theme.inputBg,
                       }}
                     >
                       <Avatar uri={display.birdId} name={display.name} size="sm" />
@@ -403,7 +430,7 @@ export default function ChoresScreen() {
                         style={{
                           fontSize: 12,
                           fontWeight: "600",
-                          color: newAssignee === m.id ? "#fff" : theme.textLight,
+                          color: isSelected ? "#fff" : theme.textLight,
                         }}
                       >
                         {display.name}
@@ -444,7 +471,7 @@ export default function ChoresScreen() {
 
             <View style={{ flexDirection: "row", gap: 12, marginBottom: 12 }}>
               <Pressable
-                onPress={() => setShowDatePicker(true)}
+                onPress={() => setActivePicker(activePicker === "date" ? "none" : "date")}
                 style={{
                   flex: 1,
                   flexDirection: "row",
@@ -457,10 +484,12 @@ export default function ChoresScreen() {
                 }}
               >
                 <CalendarDays size={18} color={theme.primary} />
-                <Text style={{ fontSize: 14, color: theme.text }}>{formatDate(newDueDate)}</Text>
+                <Text style={{ fontSize: 14, color: theme.text }} numberOfLines={1}>
+                  {formatDateWithYear(newDueDate)}
+                </Text>
               </Pressable>
               <Pressable
-                onPress={() => setShowTimePicker(true)}
+                onPress={() => setActivePicker(activePicker === "time" ? "none" : "time")}
                 style={{
                   flex: 1,
                   flexDirection: "row",
@@ -473,41 +502,45 @@ export default function ChoresScreen() {
                 }}
               >
                 <RotateCw size={18} color={theme.primary} />
-                <Text style={{ fontSize: 14, color: theme.text }}>{formatTime(newDueDate)}</Text>
+                <View>
+                  <Text style={{ fontSize: 14, color: theme.text }}>{formatTime(newDueDate)}</Text>
+                  <Text style={{ fontSize: 11, color: theme.textLight }}>{formatDateWithYear(newDueDate)}</Text>
+                </View>
               </Pressable>
             </View>
 
-            {showDatePicker && (
-              <DateTimePicker
-                value={newDueDate}
-                mode="date"
-                display={Platform.OS === "ios" ? "spinner" : "default"}
-                themeVariant={pickerThemeVariant}
-                onChange={(_, date) => {
-                  if (Platform.OS === "android") setShowDatePicker(false);
-                  if (date) setNewDueDate((prev) => new Date(prev.setFullYear(date.getFullYear(), date.getMonth(), date.getDate())));
-                }}
-              />
-            )}
-            {showTimePicker && (
-              <DateTimePicker
-                value={newDueDate}
-                mode="time"
-                display={Platform.OS === "ios" ? "spinner" : "default"}
-                themeVariant={pickerThemeVariant}
-                onChange={(_, date) => {
-                  if (Platform.OS === "android") setShowTimePicker(false);
-                  if (date) setNewDueDate((prev) => new Date(prev.setHours(date.getHours(), date.getMinutes(), 0, 0)));
-                }}
-              />
-            )}
+            <View style={{ minHeight: activePicker !== "none" ? 220 : 0, marginBottom: activePicker !== "none" ? 12 : 0 }}>
+              {activePicker === "date" && (
+                <DateTimePicker
+                  value={newDueDate}
+                  mode="date"
+                  display={Platform.OS === "ios" ? "spinner" : "default"}
+                  themeVariant={pickerThemeVariant}
+                  onChange={(_, date) => {
+                    if (Platform.OS === "android") setActivePicker("none");
+                    if (date) setNewDueDate((prev) => new Date(prev.setFullYear(date.getFullYear(), date.getMonth(), date.getDate())));
+                  }}
+                />
+              )}
+              {activePicker === "time" && (
+                <DateTimePicker
+                  value={newDueDate}
+                  mode="time"
+                  display={Platform.OS === "ios" ? "spinner" : "default"}
+                  themeVariant={pickerThemeVariant}
+                  onChange={(_, date) => {
+                    if (Platform.OS === "android") setActivePicker("none");
+                    if (date) setNewDueDate((prev) => new Date(prev.setHours(date.getHours(), date.getMinutes(), 0, 0)));
+                  }}
+                />
+              )}
+            </View>
 
             <View style={{ flexDirection: "row", gap: 8 }}>
-              {showDatePicker || showTimePicker ? (
+              {activePicker !== "none" ? (
                 <Pressable
                   onPress={() => {
-                    setShowDatePicker(false);
-                    setShowTimePicker(false);
+                    setActivePicker("none");
                   }}
                   style={{
                     flex: 1,
@@ -539,14 +572,14 @@ export default function ChoresScreen() {
                   </Pressable>
                   <Pressable
                     onPress={handleAddChore}
-                    disabled={!newTitle.trim()}
+                    disabled={!newTitle.trim() || newAssignees.length === 0}
                     style={{
                       flex: 1,
                       paddingVertical: 12,
                       borderRadius: 12,
-                      backgroundColor: newTitle.trim() ? theme.primary : theme.inactive,
+                      backgroundColor: newTitle.trim() && newAssignees.length > 0 ? theme.primary : theme.inactive,
                       alignItems: "center",
-                      opacity: newTitle.trim() ? 1 : 0.7,
+                      opacity: newTitle.trim() && newAssignees.length > 0 ? 1 : 0.7,
                     }}
                   >
                     <Text style={{ fontSize: 14, fontWeight: "600", color: "#fff" }}>
@@ -558,6 +591,7 @@ export default function ChoresScreen() {
             </View>
           </Pressable>
         </Pressable>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* Bottom buttons */}
